@@ -1,0 +1,41 @@
+﻿apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: movie-recommender
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: movie-recommender
+  template:
+    metadata:
+      labels:
+        app: movie-recommender
+    spec:
+      containers:
+      - name: movie-recommender
+        image: 848518356875.dkr.ecr.us-east-1.amazonaws.com/movie-recommender:latest
+        ports:
+        - containerPort: 8501
+        env:
+        - name: TMDB_API_KEY
+          value: "d4ed03766dfd4646eb46db700aa5ca13"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /_stcore/health
+            port: 8501
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /_stcore/health
+            port: 8501
+          initialDelaySeconds: 10
+          periodSeconds: 5
