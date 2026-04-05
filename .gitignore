@@ -1,0 +1,33 @@
+# Environment variables - NEVER commit this
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.coverage
+coverage.xml
+
+# Large data files
+*.pkl
+
+# Terraform
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.backup
+terraform/.terraform.lock.hcl
+terraform/terraform.tfvars
+
+# Virtual environment
+.venv/
+venv/
+
+# Logs
+logs/
+*.log
+
+# IDE
+.venv/
+.idea/
+*.swp
