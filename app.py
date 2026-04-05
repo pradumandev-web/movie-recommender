@@ -44,12 +44,7 @@ logger = setup_logging()
 # Get TMDB API key - simple version without st.secrets
 TMDB_KEY = os.getenv("TMDB_API_KEY")
 if not TMDB_KEY:
-    # Use your API key directly for testing
-    TMDB_KEY = "d4ed03766dfd4646eb46db700aa5ca13"
-    logger.info("Using default API key")
-
-if not TMDB_KEY:
-    st.error("🔑 TMDB API key not found. Please set it in environment variables.")
+    st.error("🔑 TMDB API key not found.")
     st.stop()
 
 logger.info("TMDB API key loaded successfully")
@@ -57,39 +52,50 @@ logger.info("TMDB API key loaded successfully")
 
 # Cache data loading with performance monitoring
 @st.cache_resource
+@st.cache_resource
 def load_data():
-    """Load pickle files with caching and validation"""
+    """Load pickle files - download from S3 if not present locally"""
     try:
+        import boto3
+
         start_time = time.time()
-        logger.info("Loading movie data...")
+        logger.info("Checking for data files...")
 
-        # Load movie data
-        movies_dict = pickle.load(open('movie_dict.pkl', 'rb'))
+        bucket_name = os.getenv("S3_BUCKET_NAME", "movie-recommender-praduman")
+
+        # Download from S3 if files don't exist locally
+        if not os.path.exists("movie_dict.pkl") or not os.path.exists("similarity.pkl"):
+            logger.info("Downloading data files from S3...")
+            s3 = boto3.client("s3")
+
+            with st.spinner("📥 Downloading movie database from S3... (first run only)"):
+                s3.download_file(bucket_name, "movie_dict.pkl", "movie_dict.pkl")
+                logger.info("Downloaded movie_dict.pkl")
+
+                s3.download_file(bucket_name, "similarity.pkl", "similarity.pkl")
+                logger.info("Downloaded similarity.pkl")
+        else:
+            logger.info("Data files found locally, skipping download")
+
+        # Load into memory
+        movies_dict = pickle.load(open("movie_dict.pkl", "rb"))
         movies_df = pd.DataFrame(movies_dict)
+        similarity_matrix = pickle.load(open("similarity.pkl", "rb"))
 
-        # Load similarity matrix
-        similarity_matrix = pickle.load(open('similarity.pkl', 'rb'))
-
-        # Validate data
         if movies_df.empty:
             raise ValueError("Movies data is empty")
         if similarity_matrix is None or len(similarity_matrix) == 0:
             raise ValueError("Similarity matrix is empty")
 
         load_time = time.time() - start_time
-        logger.info(f"Loaded {len(movies_df)} movies in {load_time:.2f} seconds")
+        logger.info(f"Loaded {len(movies_df)} movies in {load_time:.2f}s")
 
         return movies_df, similarity_matrix
 
-    except FileNotFoundError as e:
-        logger.error(f"Data file not found: {e}")
-        st.error("❌ Movie database files missing. Please check deployment.")
-        st.stop()
     except Exception as e:
         logger.error(f"Failed to load data: {e}")
         st.error(f"❌ Failed to load movie database: {str(e)}")
         st.stop()
-
 
 # Cache API calls with TTL
 @st.cache_data(ttl=3600, show_spinner=False)
