@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 env:
-  DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/movie-recommender
+  DOCKER_IMAGE: praduman127/movie-recommender
   PYTHON_VERSION: "3.9"
 
 jobs:
