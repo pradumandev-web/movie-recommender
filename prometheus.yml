@@ -1,0 +1,14 @@
+# monitoring/prometheus.yml
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: "movie-recommender"
+    static_configs:
+      - targets: ["app:8501"]
+    metrics_path: "/_stcore/health"
+
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
