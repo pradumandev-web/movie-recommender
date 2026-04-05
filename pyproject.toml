@@ -1,8 +1,0 @@
-[project]
-name = "aws-ml-model-deployment"
-version = "0.1.0"
-description = "Add your description here"
-requires-python = ">=3.13"
-dependencies = [
-    "streamlit>=1.55.0",
-]
